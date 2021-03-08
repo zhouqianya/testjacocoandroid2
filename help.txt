@@ -1,0 +1,12 @@
+1.java.io.FileNotFoundException: /jacoco.exec: open failed: EROFS (Read-only file system)
+这个问题，我尝试了一下，会出现在log里，但是不影响使用，也不影响生成覆盖率结果。
+
+2.java.io.IOException: Incompatible version 1007
+查了很多，都说是jacoco版本的问题，我的相关版本是：
+
+android studio: 2.2
+buildToolsVersion "23.0.3"
+当使用 0.7.4+或者0.7.1.XXX的时候就会出错，改成下面的0.7.5+就没有问题了。所以出现这种错误的时候，多尝试改改这个版本。
+
+3.生成的覆盖率报告无法链接到代码
+一般是因为设置的sourceDirectories不正确，需要设置到java代码的根目录，比如'src/main/java/'

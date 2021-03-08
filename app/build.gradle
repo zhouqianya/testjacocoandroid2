@@ -1,0 +1,99 @@
+apply plugin: 'com.android.application'
+//jacoco插件
+apply plugin: 'jacoco'
+//jacoco插件版本号
+jacoco {
+    toolVersion = "0.7.9"
+}
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.example.testjacocoandroid2"
+        minSdkVersion 26
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        //打开覆盖率统计开关
+        debug {
+            testCoverageEnabled = true
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+//源码文件
+def coverageSourceDirs = [
+        '../app/src/main/java'
+]
+
+//生成报告
+task jacocoTestReport(type: JacocoReport) {
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+    classDirectories = fileTree(
+            //检测覆盖率的class所在目录(以项目class所在目录为准)
+//            dir: './build/intermediates/classes/debug', //gradle2.3 class所在目录
+            dir: './build/intermediates/javac/debug/compileDebugJavaWithJavac/classes', //gradle5.4.1 class所在目录
+
+            //gradle3.2 class所在目录 dir: './build/intermediates/javac/debug/compileDebugJavaWithJavac/classes',
+            //增加以上目录中不需要检测的文件列表
+            excludes: ['**/R*.class',
+                       '**/*$InjectAdapter.class',
+                       '**/*$ModuleAdapter.class',
+                       '**/*$ViewInjector*.class'
+            ])
+    sourceDirectories = files(coverageSourceDirs)
+    executionData = files("$buildDir/outputs/code-coverage/connected/flavors/coverage.ec")
+
+    doFirst {
+        new File("$buildDir/intermediates/javac/debug/compileDebugJavaWithJavac/classes/").eachFileRecurse { file ->
+            if (file.name.contains('$$')) {
+                file.renameTo(file.path.replace('$$', '$'))
+            }
+        }
+    }
+}
+
+////首先先删除旧的merge结果文件
+//task removeOldMergeEc(type: Delete) {
+//    delete "$buildDir/mergedcoverage.ec"
+//}
+//
+////合并report
+////运行命令：gradle mergeReport -Pec_dir="/the/ec/dir" 注意：这里的dir必须是绝对路径。
+//task mergeReport(type:JacocoMerge,dependsOn:removeOldMergeEc){
+//    group = "Reporting"
+//    description = "merge jacoco report."
+//    destinationFile= file("$buildDir/mergedcoverage.ec")
+//    //这里的ec_dir是存储ec文件的文件夹
+//    FileTree tree = fileTree("$ec_dir") {
+//        include '**/*.ec'
+//    }
+//    executionData = tree
+//}
+
+// 新版本只能implementation 不能compile
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+}
